@@ -1,10 +1,9 @@
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-/* ================= 📦 البيانات الأساسية (الـ 6 عطور) ================= */
+/* ================= 📦 البيانات الأساسية ================= */
 let products = [
     { id: "1", name: "سوفاج (Sauvage)", price: 1200, stock: 8, image: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400" },
     { id: "2", name: "فيرزاتشي (Versace)", price: 950, stock: 5, image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400" },
@@ -18,32 +17,24 @@ let orders = [
     { orderId: "ORD-102938", date: "2026-07-26", total: 2400, items: ["سوفاج (2x)"] }
 ];
 
-/* ================= 🌐 الـ APIs والـ Backend ================= */
+/* ================= 🌐 الـ APIs ================= */
 
-// جلب المنتجات
 app.get('/api/products', (req, res) => {
-    console.log('📡 [SERVER]: تم جلب قائمة العطور الـ 6');
     res.json(products);
 });
 
-// تسجيل دخول الأدمن
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
     const u = (username || '').toString().trim();
     const p = (password || '').toString().trim();
 
-    console.log(`🔑 [SERVER]: محاولة دخول بالأدمن -> User: "${u}", Pass: "${p}"`);
-
     if (u === 'admin' && p === '123456') {
-        console.log('✅ [SERVER]: تم تسجيل دخول الأدمن بنجاح!');
         return res.json({ success: true, token: 'admin-auth-token-123' });
     } else {
-        console.log('❌ [SERVER]: فشل الدخول - بيانات غير مطابقة');
         return res.status(401).json({ success: false, message: 'اسم المستخدم أو كلمة السر غير صحيحة!' });
     }
 });
 
-// إحصائيات لوحة التحكم
 app.get('/api/admin/stats', (req, res) => {
     const totalRev = orders.reduce((sum, o) => sum + (o.total || 0), 0);
     res.json({
@@ -53,7 +44,6 @@ app.get('/api/admin/stats', (req, res) => {
     });
 });
 
-// إضافة عطر جديد من اللوحة
 app.post('/api/admin/products', (req, res) => {
     const { name, price, stock, image } = req.body;
     if (!name || !price) return res.status(400).json({ success: false, message: 'اكتب الاسم والسعر' });
@@ -66,18 +56,14 @@ app.post('/api/admin/products', (req, res) => {
         image: image || 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400' 
     };
     products.push(newProd);
-    console.log('➕ [SERVER]: تم إضافة عطر جديد من لوحة التحكم:', name);
     res.json({ success: true, product: newProd });
 });
 
-// حذف عطر من اللوحة
 app.delete('/api/admin/products/:id', (req, res) => {
     products = products.filter(p => p.id !== req.params.id);
-    console.log('🗑️ [SERVER]: تم حذف العطر رقم:', req.params.id);
     res.json({ success: true });
 });
 
-// تأكيد الشراء
 app.post('/api/checkout', (req, res) => {
     const { items, total } = req.body;
     if (!items || items.length === 0) return res.status(400).json({ success: false, message: 'السلة فارغة!' });
@@ -96,11 +82,10 @@ app.post('/api/checkout', (req, res) => {
         total: Number(total)
     };
     orders.unshift(newOrder);
-    console.log('🛍️ [SERVER]: طلب جديد برقم:', newOrder.orderId, 'بإجمالي:', total, 'ج.م');
     res.json({ success: true, message: 'تم تأكيد الطلب بنجاح!', orderId: newOrder.orderId });
 });
 
-/* ================= 🎨 الواجهة والتصميم المدمج بالكامل ================= */
+/* ================= 🎨 الواجهة والتصميم ================= */
 app.get('/', (req, res) => {
     res.send(`
     <!DOCTYPE html>
@@ -152,7 +137,6 @@ app.get('/', (req, res) => {
         </nav>
 
         <div class="container">
-            <!-- 1. واجهة المتجر والمنتجات -->
             <div id="storeView">
                 <div class="controls-bar">
                     <input type="text" id="sInput" oninput="filterProds()" placeholder="🔍 ابحث عن عطر...">
@@ -172,7 +156,6 @@ app.get('/', (req, res) => {
                 </div>
             </div>
 
-            <!-- 2. تسجيل دخول الأدمن -->
             <div id="adminLogin" class="card hidden">
                 <h3 style="text-align:center; margin-bottom: 15px;">🔐 دخول لوحة التحكم</h3>
                 <label>اسم المستخدم:</label>
@@ -183,7 +166,6 @@ app.get('/', (req, res) => {
                 <p id="lErr" style="color:#ef4444; text-align:center; margin-top:10px; font-weight:bold;"></p>
             </div>
 
-            <!-- 3. لوحة تحكم الأدمن (Dashboard) -->
             <div id="adminDash" class="card hidden" style="max-width:750px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
                     <h3>🛠️ لوحة التحكم الإدارية</h3>
@@ -369,7 +351,6 @@ app.get('/', (req, res) => {
                 loadAdmin();
             }
 
-            // تشغيل تلقائي
             window.addEventListener('DOMContentLoaded', () => {
                 loadStore();
             });
@@ -379,10 +360,10 @@ app.get('/', (req, res) => {
     `);
 });
 
-/* ================= 🚀 تشغيل السيرفر ================= */
-app.listen(PORT, () => {
-    console.log(`==================================================`);
-    console.log(`🚀 السيرفر المدمج شغال وجاهز على: http://localhost:${PORT}`);
-    console.log(`🔑 بيانات دخول الأدمن: اليوزر -> admin | الباسورد -> 123456`);
-    console.log(`==================================================`);
-});
+// السر هنا: تصدير app لـ Vercel وتكليف listen للمحيط المحلي فقط
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`🚀 http://localhost:${PORT}`));
+}
+
+module.exports = app;
